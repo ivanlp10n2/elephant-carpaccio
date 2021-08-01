@@ -7,11 +7,11 @@ object Hello extends Greeting with App {
 trait Greeting {
   type BillingItems = (Money, Amount, StateCode) => Money
 
-  def calculateItem: (Money, Amount) => Money = ???
+  def calculateItem(money: Money)(amount: Amount): Money = ???
 
-  def applyTaxes: TaxTable => TaxCode => Money => Money = ???
+  def applyTaxes(taxTable: TaxTable)(taxCode: TaxCode)(money:Money): Money = ???
 
-  def applyDiscount: Money => DiscountTable => Money = ???
+  def applyDiscount(money: Money)(discountTable: DiscountTable): Money = ???
 
   type TaxTable = Map[TaxCode, ChargePercent]
   type DiscountTable = Map[Money, DiscountPercent]
@@ -26,12 +26,15 @@ trait Greeting {
 
 }
 object a extends Greeting{
+  def flatMapFunction[A,B,X](fa: X => A, f: A => (X => B)): X => B =
+    (x: X) => f(fa(x)) (x)
+
   val discountTable : DiscountTable = ???
-  def applyDiscountWithTable: Money => Money = applyDiscount(_)(discountTable)
-
   val taxTable: TaxTable = ???
-  def applyTaxWithTable: TaxCode => Money => Money = applyTaxes(taxTable)
 
-  def pipeline: TaxCode => Money => Money =
-    applyTaxWithTable andThen applyDiscountWithTable
+  def applyTaxWithTable: TaxCode => Money => Money = applyTaxes(taxTable)
+  val applyDiscountWithTable: Money => Money = applyDiscount(_)(discountTable)
+
+  def pipeline: TaxCode => Money => Money = (taxCode:TaxCode) => (money:Money) =>
+    applyDiscountWithTable andThen applyTaxWithTable(taxCode)
 }
