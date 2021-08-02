@@ -26,7 +26,7 @@ trait Greeting {
 
 }
 object a extends Greeting{
-  def flatMapFunction[A,B,X](fa: X => A, f: A => (X => B)): X => B =
+  def flatMapFunction[A,B,X](fa: X => A, f: A => X => B): X => B =
     (x: X) => f(fa(x)) (x)
 
   val discountTable : DiscountTable = ???
@@ -35,6 +35,9 @@ object a extends Greeting{
   def applyTaxWithTable: TaxCode => Money => Money = applyTaxes(taxTable)
   val applyDiscountWithTable: Money => Money = applyDiscount(_)(discountTable)
 
-  def pipeline: TaxCode => Money => Money = (taxCode:TaxCode) => (money:Money) =>
+  def applyReductionsWithTaxes: TaxCode => Money => Money = (taxCode:TaxCode) =>
     applyDiscountWithTable andThen applyTaxWithTable(taxCode)
+
+  val state = applyReductionsWithTaxes("TX")(3)
+  val items: (Money, Amount) => Money = calculateItem(_)(_)
 }
